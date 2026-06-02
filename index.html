@@ -397,19 +397,19 @@
         <tbody>
           <tr>
             <td><span class="pill pill-green"><i class="ti ti-stars" style="font-size:11px"></i>Ensemble (GB+XGB)</span></td>
-            <td class="mono">≥ 80%</td><td class="mono">≥ 0.85</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td><span class="pill pill-green">✅ Cumple</span></td>
+            <td class="mono">89.41%</td><td class="mono">0.9422</td><td class="mono">74.26%</td><td class="mono">85.59%</td><td class="mono">0.7953</td><td><span class="pill pill-green">✅ Cumple</span></td>
           </tr>
           <tr>
             <td><span class="pill pill-blue">Gradient Boosting</span></td>
-            <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td><span class="pill pill-amber">Comparado</span></td>
+            <td class="mono">87.78%</td><td class="mono">0.9399</td><td class="mono">77.88%</td><td class="mono">68.64%</td><td class="mono">0.7297</td><td><span class="pill pill-green">✅ Cumple</span></td>
           </tr>
           <tr>
             <td><span class="pill pill-amber">XGBoost</span></td>
-            <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td><span class="pill pill-amber">Comparado</span></td>
+            <td class="mono">88.19%</td><td class="mono">0.9421</td><td class="mono">78.85%</td><td class="mono">69.49%</td><td class="mono">0.7387</td><td><span class="pill pill-green">✅ Cumple</span></td>
           </tr>
           <tr>
             <td><span class="pill">Random Forest</span></td>
-            <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td><span class="pill pill-amber">Comparado</span></td>
+            <td class="mono">85.74%</td><td class="mono">0.9148</td><td class="mono">69.05%</td><td class="mono">73.73%</td><td class="mono">0.7131</td><td><span class="pill pill-green">✅ Cumple</span></td>
           </tr>
         </tbody>
       </table>
@@ -576,7 +576,7 @@
       <div class="metric-card metric-green">
         <div class="metric-icon"><i class="ti ti-check"></i></div>
         <div class="metric-label">Accuracy</div>
-        <div class="metric-value">88%</div>
+        <div class="metric-value">89.4%</div>
         <div class="metric-sub">✅ Supera objetivo ≥ 80%</div>
       </div>
       <div class="metric-card metric-blue">
@@ -586,22 +586,22 @@
         <div class="metric-sub">✅ Supera objetivo ≥ 0.85</div>
       </div>
       <div class="metric-card metric-amber">
-        <div class="metric-icon"><i class="ti ti-brain"></i></div>
-        <div class="metric-label">Modelos comparados</div>
-        <div class="metric-value">4</div>
-        <div class="metric-sub">GB · XGB · RF · Ensemble</div>
+        <div class="metric-icon"><i class="ti ti-zoom-check"></i></div>
+        <div class="metric-label">Recall</div>
+        <div class="metric-value">85.6%</div>
+        <div class="metric-sub">Zonas de riesgo detectadas</div>
       </div>
       <div class="metric-card">
         <div class="metric-icon" style="color:var(--text3)"><i class="ti ti-chart-bar"></i></div>
-        <div class="metric-label">Features totales</div>
-        <div class="metric-value" style="color:var(--text)">25</div>
-        <div class="metric-sub">13 físicas + ingeniería</div>
+        <div class="metric-label">F1-Score</div>
+        <div class="metric-value" style="color:var(--text)">0.7953</div>
+        <div class="metric-sub">Balance precisión/recall</div>
       </div>
       <div class="metric-card metric-red">
         <div class="metric-icon"><i class="ti ti-target"></i></div>
-        <div class="metric-label">Target binarizado</div>
-        <div class="metric-value">P75</div>
-        <div class="metric-sub">Percentil 75 emergencias</div>
+        <div class="metric-label">Umbral óptimo</div>
+        <div class="metric-value">0.26</div>
+        <div class="metric-sub">Maximización de F1</div>
       </div>
     </div>
 
