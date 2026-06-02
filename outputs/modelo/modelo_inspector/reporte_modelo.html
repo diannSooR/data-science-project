@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang='es'><head><meta charset='UTF-8'>
+<title>Reporte de Inspección del Modelo</title>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background: #f8f9fa; color: #333; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #7f8c8d; }
+        .card { background: white; border-radius: 8px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid #ecf0f1; }
+        th { background: #3498db; color: white; }
+        tr:nth-child(even) { background: #f2f6fc; }
+        .metric-good { color: #27ae60; font-weight: bold; }
+        .metric-warn { color: #e67e22; font-weight: bold; }
+        .bar { display: inline-block; height: 14px; background: linear-gradient(90deg, #3498db, #2ecc71); border-radius: 3px; margin-left: 8px; vertical-align: middle; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; }
+        .badge-primary { background: #3498db; color: white; }
+        .badge-success { background: #27ae60; color: white; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        .footer { text-align: center; color: #95a5a6; margin-top: 40px; font-size: 0.85em; }
+    </style>
+    
+</head><body>
+<h1>🔍 Reporte de Inspección del Modelo</h1>
+<p><strong>Fecha:</strong> 2026-06-02 00:56:57</p>
+<p><strong>Archivo:</strong> <code>/home/ubuntu/Uploads/outputs/modelo/modelo_final.joblib</code></p>
+<div class='card'>
+<h2>Tipo de Modelo</h2>
+<p><span class='badge badge-primary'>AveragingEnsemble</span></p>
+<p><em>Ensemble que promedia probabilidades de múltiples modelos</em></p>
+</div>
+<div class='card'>
+<h2>Sub-modelos (2)</h2>
+<h3>1. Scikit-learn (GradientBoostingClassifier)</h3>
+<table><tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td><code>ccp_alpha</code></td><td>0.0</td></tr>
+<tr><td><code>criterion</code></td><td>friedman_mse</td></tr>
+<tr><td><code>init</code></td><td>None</td></tr>
+<tr><td><code>learning_rate</code></td><td>0.03</td></tr>
+<tr><td><code>loss</code></td><td>log_loss</td></tr>
+<tr><td><code>max_depth</code></td><td>4</td></tr>
+<tr><td><code>max_features</code></td><td>sqrt</td></tr>
+<tr><td><code>max_leaf_nodes</code></td><td>None</td></tr>
+<tr><td><code>min_impurity_decrease</code></td><td>0.0</td></tr>
+<tr><td><code>min_samples_leaf</code></td><td>8</td></tr>
+<tr><td><code>min_samples_split</code></td><td>2</td></tr>
+<tr><td><code>min_weight_fraction_leaf</code></td><td>0.0</td></tr>
+<tr><td><code>n_estimators</code></td><td>800</td></tr>
+<tr><td><code>n_iter_no_change</code></td><td>None</td></tr>
+<tr><td><code>random_state</code></td><td>42</td></tr>
+<tr><td><code>subsample</code></td><td>0.8</td></tr>
+<tr><td><code>tol</code></td><td>0.0001</td></tr>
+<tr><td><code>validation_fraction</code></td><td>0.1</td></tr>
+<tr><td><code>verbose</code></td><td>0</td></tr>
+<tr><td><code>warm_start</code></td><td>False</td></tr>
+</table>
+<h3>2. XGBoost (XGBClassifier)</h3>
+<table><tr><th>Parámetro</th><th>Valor</th></tr>
+<tr><td><code>objective</code></td><td>binary:logistic</td></tr>
+<tr><td><code>base_score</code></td><td>None</td></tr>
+<tr><td><code>booster</code></td><td>None</td></tr>
+<tr><td><code>callbacks</code></td><td>None</td></tr>
+<tr><td><code>colsample_bylevel</code></td><td>None</td></tr>
+<tr><td><code>colsample_bynode</code></td><td>None</td></tr>
+<tr><td><code>colsample_bytree</code></td><td>0.7</td></tr>
+<tr><td><code>device</code></td><td>None</td></tr>
+<tr><td><code>early_stopping_rounds</code></td><td>None</td></tr>
+<tr><td><code>enable_categorical</code></td><td>False</td></tr>
+<tr><td><code>eval_metric</code></td><td>auc</td></tr>
+<tr><td><code>feature_types</code></td><td>None</td></tr>
+<tr><td><code>feature_weights</code></td><td>None</td></tr>
+<tr><td><code>gamma</code></td><td>None</td></tr>
+<tr><td><code>grow_policy</code></td><td>None</td></tr>
+<tr><td><code>importance_type</code></td><td>None</td></tr>
+<tr><td><code>interaction_constraints</code></td><td>None</td></tr>
+<tr><td><code>learning_rate</code></td><td>0.03</td></tr>
+<tr><td><code>max_bin</code></td><td>None</td></tr>
+<tr><td><code>max_cat_threshold</code></td><td>None</td></tr>
+<tr><td><code>max_cat_to_onehot</code></td><td>None</td></tr>
+<tr><td><code>max_delta_step</code></td><td>None</td></tr>
+<tr><td><code>max_depth</code></td><td>4</td></tr>
+<tr><td><code>max_leaves</code></td><td>None</td></tr>
+<tr><td><code>min_child_weight</code></td><td>None</td></tr>
+<tr><td><code>missing</code></td><td>nan</td></tr>
+<tr><td><code>monotone_constraints</code></td><td>None</td></tr>
+<tr><td><code>multi_strategy</code></td><td>None</td></tr>
+<tr><td><code>n_estimators</code></td><td>800</td></tr>
+<tr><td><code>n_jobs</code></td><td>-1</td></tr>
+<tr><td><code>num_parallel_tree</code></td><td>None</td></tr>
+<tr><td><code>random_state</code></td><td>42</td></tr>
+<tr><td><code>reg_alpha</code></td><td>None</td></tr>
+<tr><td><code>reg_lambda</code></td><td>2.0</td></tr>
+<tr><td><code>sampling_method</code></td><td>None</td></tr>
+<tr><td><code>scale_pos_weight</code></td><td>None</td></tr>
+<tr><td><code>subsample</code></td><td>0.8</td></tr>
+<tr><td><code>tree_method</code></td><td>None</td></tr>
+<tr><td><code>validate_parameters</code></td><td>None</td></tr>
+<tr><td><code>verbosity</code></td><td>0</td></tr>
+</table>
+</div>
+<div class='card'>
+<h2>Features (25)</h2>
+<ol>
+<li><code>riesgo_sismo</code></li>
+<li><code>pct_afectacion_sismo</code></li>
+<li><code>riesgo_inundacion</code></li>
+<li><code>severidad_inundacion</code></li>
+<li><code>pct_afectacion_inundacion</code></li>
+<li><code>riesgo_laderas</code></li>
+<li><code>pct_afectacion_laderas</code></li>
+<li><code>fracturas_count</code></li>
+<li><code>fracturas_longitud_m</code></li>
+<li><code>tipo_suelo</code></li>
+<li><code>pob_total</code></li>
+<li><code>imu_2020</code></li>
+<li><code>area_total</code></li>
+<li><code>suma_riesgos</code></li>
+<li><code>indice_riesgo_compuesto</code></li>
+<li><code>riesgo_general</code></li>
+<li><code>sismo_x_inundacion</code></li>
+<li><code>fracturas_por_area</code></li>
+<li><code>pob_densidad</code></li>
+<li><code>log_pob</code></li>
+<li><code>log_area</code></li>
+<li><code>indice_x_pob</code></li>
+<li><code>indice_x_area</code></li>
+<li><code>imu_x_indice</code></li>
+<li><code>sismo_x_suelo</code></li>
+</ol></div>
+<div class='card'>
+<h2>Importancia de Features</h2>
+<table><tr><th>#</th><th>Feature</th><th>Importancia</th><th>Barra</th></tr>
+<tr><td>1</td><td><code>indice_x_area</code></td><td>0.1286</td><td><span class='bar' style='width:200px'></span></td></tr>
+<tr><td>2</td><td><code>indice_riesgo_compuesto</code></td><td>0.1214</td><td><span class='bar' style='width:188px'></span></td></tr>
+<tr><td>3</td><td><code>imu_x_indice</code></td><td>0.0921</td><td><span class='bar' style='width:143px'></span></td></tr>
+<tr><td>4</td><td><code>area_total</code></td><td>0.0637</td><td><span class='bar' style='width:98px'></span></td></tr>
+<tr><td>5</td><td><code>log_area</code></td><td>0.0599</td><td><span class='bar' style='width:93px'></span></td></tr>
+<tr><td>6</td><td><code>riesgo_sismo</code></td><td>0.0592</td><td><span class='bar' style='width:92px'></span></td></tr>
+<tr><td>7</td><td><code>riesgo_general</code></td><td>0.0566</td><td><span class='bar' style='width:87px'></span></td></tr>
+<tr><td>8</td><td><code>imu_2020</code></td><td>0.0432</td><td><span class='bar' style='width:67px'></span></td></tr>
+<tr><td>9</td><td><code>suma_riesgos</code></td><td>0.0348</td><td><span class='bar' style='width:54px'></span></td></tr>
+<tr><td>10</td><td><code>indice_x_pob</code></td><td>0.0345</td><td><span class='bar' style='width:53px'></span></td></tr>
+<tr><td>11</td><td><code>sismo_x_suelo</code></td><td>0.0332</td><td><span class='bar' style='width:51px'></span></td></tr>
+<tr><td>12</td><td><code>log_pob</code></td><td>0.0324</td><td><span class='bar' style='width:50px'></span></td></tr>
+<tr><td>13</td><td><code>pct_afectacion_sismo</code></td><td>0.0297</td><td><span class='bar' style='width:46px'></span></td></tr>
+<tr><td>14</td><td><code>pob_total</code></td><td>0.0245</td><td><span class='bar' style='width:38px'></span></td></tr>
+<tr><td>15</td><td><code>sismo_x_inundacion</code></td><td>0.0233</td><td><span class='bar' style='width:36px'></span></td></tr>
+<tr><td>16</td><td><code>pct_afectacion_laderas</code></td><td>0.0208</td><td><span class='bar' style='width:32px'></span></td></tr>
+<tr><td>17</td><td><code>fracturas_count</code></td><td>0.0199</td><td><span class='bar' style='width:31px'></span></td></tr>
+<tr><td>18</td><td><code>pob_densidad</code></td><td>0.0188</td><td><span class='bar' style='width:29px'></span></td></tr>
+<tr><td>19</td><td><code>fracturas_por_area</code></td><td>0.0186</td><td><span class='bar' style='width:28px'></span></td></tr>
+<tr><td>20</td><td><code>pct_afectacion_inundacion</code></td><td>0.0185</td><td><span class='bar' style='width:28px'></span></td></tr>
+<tr><td>21</td><td><code>riesgo_laderas</code></td><td>0.0168</td><td><span class='bar' style='width:26px'></span></td></tr>
+<tr><td>22</td><td><code>riesgo_inundacion</code></td><td>0.0141</td><td><span class='bar' style='width:21px'></span></td></tr>
+<tr><td>23</td><td><code>fracturas_longitud_m</code></td><td>0.0129</td><td><span class='bar' style='width:20px'></span></td></tr>
+<tr><td>24</td><td><code>severidad_inundacion</code></td><td>0.0113</td><td><span class='bar' style='width:17px'></span></td></tr>
+<tr><td>25</td><td><code>tipo_suelo</code></td><td>0.0110</td><td><span class='bar' style='width:17px'></span></td></tr>
+</table></div>
+<div class='card'>
+<h2>Métricas de Evaluación</h2>
+<table><tr><th>Métrica</th><th>Valor</th><th>Estado</th></tr>
+<tr><td><strong>accuracy</strong></td><td class='metric-good'>0.8941</td><td>✅ ≥ 0.80</td></tr>
+<tr><td><strong>precision</strong></td><td class=''>0.7426</td><td></td></tr>
+<tr><td><strong>recall</strong></td><td class='metric-good'>0.8559</td><td></td></tr>
+<tr><td><strong>f1</strong></td><td class='metric-good'>0.7953</td><td></td></tr>
+<tr><td><strong>auc_roc</strong></td><td class='metric-good'>0.9422</td><td>✅ ≥ 0.85</td></tr>
+<tr><td><strong>threshold</strong></td><td class=''>0.2600</td><td></td></tr>
+</table></div>
+<div class='footer'>Generado el 2026-06-02 00:56:57 — Análisis de Riesgos CDMX</div>
+</body></html>
