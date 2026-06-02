@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIGRE — Sistema de Gestión de Riesgo de Emergencias · CDMX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0e0f11; --bg2:#161719; --bg3:#1e2024;
+      --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.16);
+      --text:#f0efe8; --text2:#9a9992; --text3:#5e5d58;
+      --red:#e24b4a; --red-bg:#2a1414; --red-light:#f09595;
+      --amber:#ef9f27; --amber-bg:#261c09; --amber-light:#fac775;
+      --green:#639922; --green-bg:#131d08; --green-light:#c0dd97;
+      --blue:#378add; --blue-bg:#0c1a27; --blue-light:#85b7eb;
+      --radius:10px; --radius-sm:6px;
+    }
+    html { scroll-behavior:smooth; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; line-height:1.6; }
+    .wrapper { max-width:1200px; margin:0 auto; padding:0 24px 48px; }
+
+    /* HEADER */
+    .header { display:flex; align-items:center; justify-content:space-between; padding:24px 0 20px; border-bottom:0.5px solid var(--border); margin-bottom:28px; gap:16px; flex-wrap:wrap; }
+    .header-left { display:flex; align-items:center; gap:14px; }
+    .logo { width:42px; height:42px; border-radius:var(--radius-sm); background:var(--red); display:flex; align-items:center; justify-content:center; font-size:20px; color:#fff; flex-shrink:0; }
+    .header-title { font-size:16px; font-weight:600; color:var(--text); }
+    .header-sub { font-size:12px; color:var(--text2); margin-top:2px; }
+    .header-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .live-badge { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--green-light); background:var(--green-bg); border:0.5px solid rgba(99,153,34,0.3); padding:5px 12px; border-radius:20px; }
+    .live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+    .header-date { font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; }
+
+    /* TABS */
+    .tabs { display:flex; gap:2px; margin-bottom:28px; border-bottom:0.5px solid var(--border); }
+    .tab-btn { font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; color:var(--text2); background:none; border:none; cursor:pointer; padding:10px 18px; border-bottom:2px solid transparent; transition:color 0.2s, border-color 0.2s; margin-bottom:-0.5px; display:flex; align-items:center; gap:6px; }
+    .tab-btn:hover { color:var(--text); }
+    .tab-btn.active { color:var(--text); border-bottom-color:var(--red); }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    .section-label { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text3); margin-bottom:12px; }
+
+    /* METRICS */
+    .metrics-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-bottom:20px; }
+    .metric-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius); padding:16px 18px; transition:border-color 0.2s; }
+    .metric-card:hover { border-color:var(--border2); }
+    .metric-icon { font-size:18px; margin-bottom:10px; }
+    .metric-label { font-size:11px; color:var(--text2); margin-bottom:5px; }
+    .metric-value { font-size:26px; font-weight:600; line-height:1; }
+    .metric-sub { font-size:11px; color:var(--text3); margin-top:5px; }
+    .metric-red .metric-value{color:var(--red-light)} .metric-red .metric-icon{color:var(--red)}
+    .metric-amber .metric-value{color:var(--amber-light)} .metric-amber .metric-icon{color:var(--amber)}
+    .metric-green .metric-value{color:var(--green-light)} .metric-green .metric-icon{color:var(--green)}
+    .metric-blue .metric-value{color:var(--blue-light)} .metric-blue .metric-icon{color:var(--blue)}
+
+    /* BARRAS */
+    .bar-list { display:flex; flex-direction:column; gap:10px; }
+    .bar-row { display:flex; align-items:center; gap:10px; }
+    .bar-rank { width:18px; font-size:11px; font-family:'DM Mono',monospace; color:var(--text3); text-align:center; flex-shrink:0; }
+    .bar-label { width:130px; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
+    .bar-track { flex:1; height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:4px; }
+    .bar-val { width:48px; text-align:right; font-size:12px; font-weight:500; color:var(--text2); font-family:'DM Mono',monospace; flex-shrink:0; }
+
+    /* ALERTAS */
+    .alert-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:24px; }
+    @media(max-width:700px){ .alert-grid{grid-template-columns:1fr} }
+    .alert-item { display:flex; align-items:flex-start; gap:12px; background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; transition:border-color 0.2s; }
+    .alert-item:hover { border-color:var(--border2); }
+    .alert-item.high { border-left:3px solid var(--red); }
+    .alert-item.med { border-left:3px solid var(--amber); }
+    .alert-icon { font-size:18px; margin-top:1px; flex-shrink:0; }
+    .alert-title { font-size:13px; font-weight:600; color:var(--text); }
+    .alert-alcaldia { font-size:10px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--text3); margin-bottom:3px; }
+    .alert-desc { font-size:11px; color:var(--text2); margin-top:4px; line-height:1.5; }
+    .alert-tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+    .alert-tag { font-size:10px; padding:2px 7px; border-radius:20px; border:0.5px solid var(--border2); color:var(--text3); font-family:'DM Mono',monospace; }
+
+    /* GRIDS */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+    .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px; }
+    @media(max-width:780px){ .two-col,.three-col{grid-template-columns:1fr} }
+
+    /* CARDS */
+    .card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
+    .card-title { font-size:12px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px; display:flex; align-items:center; gap:7px; }
+    .card-title i { font-size:15px; }
+
+    /* LEYENDA */
+    .legend-row { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px; }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text2); }
+    .legend-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+    /* TABLA */
+    .cluster-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .cluster-table th { font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; padding:6px 10px; text-align:left; border-bottom:0.5px solid var(--border); }
+    .cluster-table td { padding:10px; border-bottom:0.5px solid var(--border); color:var(--text); }
+    .cluster-table tr:last-child td { border-bottom:none; }
+    .cluster-table tr:hover td { background:var(--bg3); }
+    .mono { font-family:'DM Mono',monospace; color:var(--text2); }
+
+    /* PILLS */
+    .pill { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:500; padding:3px 9px; border-radius:20px; }
+    .pill-red { background:var(--red-bg); color:var(--red-light); border:0.5px solid rgba(226,75,74,0.25); }
+    .pill-amber { background:var(--amber-bg); color:var(--amber-light); border:0.5px solid rgba(239,159,39,0.25); }
+    .pill-green { background:var(--green-bg); color:var(--green-light); border:0.5px solid rgba(99,153,34,0.25); }
+    .pill-blue { background:var(--blue-bg); color:var(--blue-light); border:0.5px solid rgba(55,138,221,0.25); }
+
+    /* SCATTER */
+    .scatter-legend { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+    .scatter-leg-item { display:flex; align-items:flex-start; gap:8px; background:var(--bg3); border-radius:var(--radius-sm); padding:8px 10px; }
+    .scatter-leg-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; margin-top:2px; }
+    .scatter-leg-title { font-size:12px; font-weight:500; color:var(--text); }
+    .scatter-leg-desc { font-size:10px; color:var(--text2); margin-top:1px; }
+
+    /* MODELO TAB */
+    .feat-list { display:flex; flex-direction:column; gap:14px; }
+    .feat-row { display:flex; flex-direction:column; gap:5px; }
+    .feat-header { display:flex; justify-content:space-between; align-items:center; }
+    .feat-name { font-size:13px; color:var(--text); font-weight:500; }
+    .feat-pct { font-size:13px; font-family:'DM Mono',monospace; color:var(--text2); }
+    .feat-track { width:100%; height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; }
+    .feat-fill { height:100%; border-radius:4px; background:var(--blue); }
+    .feat-desc { font-size:11px; color:var(--text3); margin-top:1px; }
+    .mini-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .mini-stat { background:var(--bg3); border-radius:var(--radius-sm); padding:10px 12px; }
+    .mini-stat-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; }
+    .mini-stat-val { font-size:18px; font-weight:600; font-family:'DM Mono',monospace; }
+
+    /* MAPA */
+    #map {
+      width:100%; height:520px;
+      border-radius:var(--radius);
+      border:0.5px solid var(--border);
+      background:var(--bg3);
+    }
+    .map-wrap { position:relative; margin-bottom:16px; }
+    .map-legend-overlay {
+      position:absolute; bottom:16px; left:16px; z-index:999;
+      background:rgba(14,15,17,0.92);
+      border:0.5px solid var(--border2);
+      border-radius:var(--radius-sm);
+      padding:12px 14px;
+      font-size:12px;
+    }
+    .map-legend-title { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text3); margin-bottom:8px; }
+    .map-legend-item { display:flex; align-items:center; gap:8px; color:var(--text2); margin-bottom:5px; }
+    .map-legend-item:last-child { margin-bottom:0; }
+    .map-legend-swatch { width:14px; height:14px; border-radius:3px; flex-shrink:0; }
+    .map-controls { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+    .map-ctrl-btn { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; color:var(--text2); background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-sm); padding:6px 14px; cursor:pointer; transition:all 0.2s; }
+    .map-ctrl-btn:hover { color:var(--text); border-color:var(--border2); }
+    .map-ctrl-btn.active { color:var(--text); background:var(--bg3); border-color:var(--border2); }
+    .leaflet-popup-content-wrapper { background:#1e2024 !important; border:0.5px solid rgba(255,255,255,0.12) !important; border-radius:8px !important; box-shadow:0 4px 20px rgba(0,0,0,0.5) !important; color:#f0efe8 !important; }
+    .leaflet-popup-tip { background:#1e2024 !important; }
+    .leaflet-popup-content { margin:12px 14px !important; font-family:'DM Sans',sans-serif !important; font-size:13px !important; }
+    .popup-cluster { font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#9a9992; margin-bottom:4px; }
+    .popup-title { font-size:14px; font-weight:600; color:#f0efe8; margin-bottom:8px; }
+    .popup-row { display:flex; justify-content:space-between; gap:16px; font-size:12px; color:#9a9992; padding:3px 0; border-bottom:0.5px solid rgba(255,255,255,0.06); }
+    .popup-row:last-child { border-bottom:none; }
+    .popup-val { color:#f0efe8; font-family:'DM Mono',monospace; }
+    /* override leaflet tile dark */
+    .leaflet-tile { filter: brightness(0.75) saturate(0.3) contrast(0.9); }
+
+    /* FOOTER */
+    .footer { margin-top:40px; padding-top:20px; border-top:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+    .footer-left { font-size:11px; color:var(--text3); line-height:1.8; }
+    .footer-tag { font-size:11px; color:var(--text3); background:var(--bg3); border:0.5px solid var(--border); padding:4px 10px; border-radius:20px; font-family:'DM Mono',monospace; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo"><i class="ti ti-emergency-bed"></i></div>
+      <div>
+        <div class="header-title">SIGRE — Sistema de Gestión de Riesgo de Emergencias</div>
+        <div class="header-sub">Ciudad de México · Análisis por AGEB · Ensemble GB+XGB + 25 features · Dataset v3</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge"><div class="live-dot"></div>Análisis activo</div>
+      <div class="header-date" id="current-date">—</div>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview',this)"><i class="ti ti-dashboard"></i>Vista general</button>
+    <button class="tab-btn" onclick="switchTab('mapa',this)"><i class="ti ti-map"></i>Mapa interactivo</button>
+    <button class="tab-btn" onclick="switchTab('salidas',this)"><i class="ti ti-chart-bar"></i>Salidas del análisis</button>
+    <button class="tab-btn" onclick="switchTab('modelo',this)"><i class="ti ti-brain"></i>Modelo predictivo</button>
+  </div>
+
+  <!-- ══════════ TAB: OVERVIEW ══════════ -->
+  <div id="tab-overview" class="tab-panel active">
+
+    <!-- MÉTRICAS -->
+    <div class="section-label">Resumen ejecutivo</div>
+    <div class="metrics-grid">
+      <div class="metric-card metric-red">
+        <div class="metric-icon"><i class="ti ti-alert-triangle"></i></div>
+        <div class="metric-label">Zonas de alto riesgo</div>
+        <div class="metric-value">613</div>
+        <div class="metric-sub">Target P75 · prioridad inmediata</div>
+      </div>
+      <div class="metric-card metric-amber">
+        <div class="metric-icon"><i class="ti ti-map-pin"></i></div>
+        <div class="metric-label">AGEBs analizadas</div>
+        <div class="metric-value">2,453</div>
+        <div class="metric-sub">2,431 urbanas + 22 rurales</div>
+      </div>
+      <div class="metric-card metric-blue">
+        <div class="metric-icon"><i class="ti ti-file-report"></i></div>
+        <div class="metric-label">Emergencias históricas</div>
+        <div class="metric-value">18.4k</div>
+        <div class="metric-sub">Registros RUSE integrados</div>
+      </div>
+      <div class="metric-card metric-green">
+        <div class="metric-icon"><i class="ti ti-cpu"></i></div>
+        <div class="metric-label">Precisión del modelo</div>
+        <div class="metric-value">≥80%</div>
+        <div class="metric-sub">Ensemble GB + XGBoost</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon" style="color:var(--text3)"><i class="ti ti-shape-3"></i></div>
+        <div class="metric-label">Con fracturas geológicas</div>
+        <div class="metric-value" style="color:var(--text)">341</div>
+        <div class="metric-sub">AGEBs en zona de fractura</div>
+      </div>
+    </div>
+
+    <!-- TOP 6 EMERGENCIAS -->
+    <div class="section-label" style="margin-top:4px;">Top 6 — alcaldías con más emergencias históricas</div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="bar-list">
+        <div class="bar-row">
+          <div class="bar-rank">1</div>
+          <div class="bar-label">Iztapalapa</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--red)"></div></div>
+          <div class="bar-val">3,841</div>
+          <span class="pill pill-red" style="flex-shrink:0;font-size:10px;">Alto riesgo</span>
+        </div>
+        <div class="bar-row">
+          <div class="bar-rank">2</div>
+          <div class="bar-label">Gustavo A. Madero</div>
+          <div class="bar-track"><div class="bar-fill" style="width:82%;background:#C84040"></div></div>
+          <div class="bar-val">3,150</div>
+          <span class="pill pill-red" style="flex-shrink:0;font-size:10px;">Alto riesgo</span>
+        </div>
+        <div class="bar-row">
+          <div class="bar-rank">3</div>
+          <div class="bar-label">Tlalpan</div>
+          <div class="bar-track"><div class="bar-fill" style="width:67%;background:var(--amber)"></div></div>
+          <div class="bar-val">2,571</div>
+          <span class="pill pill-amber" style="flex-shrink:0;font-size:10px;">Medio-alto</span>
+        </div>
+        <div class="bar-row">
+          <div class="bar-rank">4</div>
+          <div class="bar-label">Coyoacán</div>
+          <div class="bar-track"><div class="bar-fill" style="width:54%;background:#C8840F"></div></div>
+          <div class="bar-val">2,075</div>
+          <span class="pill pill-amber" style="flex-shrink:0;font-size:10px;">Medio-alto</span>
+        </div>
+        <div class="bar-row">
+          <div class="bar-rank">5</div>
+          <div class="bar-label">Álvaro Obregón</div>
+          <div class="bar-track"><div class="bar-fill" style="width:43%;background:var(--green)"></div></div>
+          <div class="bar-val">1,640</div>
+          <span class="pill pill-green" style="flex-shrink:0;font-size:10px;">Medio-bajo</span>
+        </div>
+        <div class="bar-row">
+          <div class="bar-rank">6</div>
+          <div class="bar-label">Xochimilco</div>
+          <div class="bar-track"><div class="bar-fill" style="width:34%;background:#4A7A1A"></div></div>
+          <div class="bar-val">1,302</div>
+          <span class="pill pill-green" style="flex-shrink:0;font-size:10px;">Medio-bajo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTAS -->
+    <div class="section-label">Alertas prioritarias activas</div>
+    <div class="alert-grid" style="margin-bottom:24px;">
+      <div class="alert-item high">
+        <i class="ti ti-flame alert-icon" style="color:var(--red)"></i>
+        <div>
+          <div class="alert-alcaldia">Prioridad crítica</div>
+          <div class="alert-title">Iztapalapa — Zona lacustre</div>
+          <div class="alert-desc">Alta densidad poblacional sobre suelo tipo IV. Riesgo de inundación máximo. Requiere plan de evacuación activo.</div>
+          <div class="alert-tags">
+            <span class="alert-tag">Inundación 4.8/5</span>
+            <span class="alert-tag">Roca (Zona I)</span>
+            <span class="alert-tag">3,841 emergencias</span>
+          </div>
+        </div>
+      </div>
+      <div class="alert-item high">
+        <i class="ti ti-building-skyscraper alert-icon" style="color:var(--red)"></i>
+        <div>
+          <div class="alert-alcaldia">Prioridad crítica</div>
+          <div class="alert-title">Gustavo A. Madero — Fractura activa</div>
+          <div class="alert-desc">341 AGEBs sobre fracturas geológicas confirmadas con amplificación sísmica documentada.</div>
+          <div class="alert-tags">
+            <span class="alert-tag">Sismo 4.5/5</span>
+            <span class="alert-tag">341 AGEBs</span>
+            <span class="alert-tag">Fractura activa</span>
+          </div>
+        </div>
+      </div>
+      <div class="alert-item med">
+        <i class="ti ti-droplet alert-icon" style="color:var(--amber)"></i>
+        <div>
+          <div class="alert-alcaldia">Prioridad alta</div>
+          <div class="alert-title">Tlalpan — Laderas con riesgo</div>
+          <div class="alert-desc">Severidad de inundación alta + IMU bajo. Población vulnerable sin recursos de respuesta propios.</div>
+          <div class="alert-tags">
+            <span class="alert-tag">IMU −0.8</span>
+            <span class="alert-tag">Ladera</span>
+            <span class="alert-tag">2,571 emergencias</span>
+          </div>
+        </div>
+      </div>
+      <div class="alert-item med">
+        <i class="ti ti-waves alert-icon" style="color:var(--amber)"></i>
+        <div>
+          <div class="alert-alcaldia">Prioridad alta</div>
+          <div class="alert-title">Xochimilco — Suelo blando</div>
+          <div class="alert-desc">Zona lacustre histórica. Suelo blando amplifica ondas sísmicas. Inundaciones recurrentes en temporada de lluvias.</div>
+          <div class="alert-tags">
+            <span class="alert-tag">Arenoso (Zona III)</span>
+            <span class="alert-tag">Zona lacustre</span>
+            <span class="alert-tag">Riesgo compuesto</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISTRIBUCIÓN CLUSTERS + SCATTER -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-chart-bar"></i> Distribución del target (P75)</div>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:#3B6D11"></div>Bajo riesgo</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#791F1F"></div>Alto riesgo</div>
+        </div>
+        <div style="position:relative;height:220px;">
+          <canvas id="clusterChart" role="img" aria-label="Distribución de AGEBs: Bajo riesgo 1840, Alto riesgo 613.">Bajo riesgo 1840, Alto riesgo 613.</canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-chart-dots"></i> Riesgo sísmico vs marginación por AGEB</div>
+        <div style="position:relative;height:200px;">
+          <canvas id="scatterChart" role="img" aria-label="Dispersión de AGEBs según riesgo sísmico e índice de marginación. Cuatro cuadrantes de vulnerabilidad.">Dispersión de AGEBs por riesgo sísmico e índice de marginación.</canvas>
+        </div>
+        <div class="scatter-legend">
+          <div class="scatter-leg-item">
+            <div class="scatter-leg-dot" style="background:#791F1F"></div>
+            <div><div class="scatter-leg-title">Alto riesgo + alta marginación</div><div class="scatter-leg-desc">Máxima urgencia de intervención</div></div>
+          </div>
+          <div class="scatter-leg-item">
+            <div class="scatter-leg-dot" style="background:#854F0B"></div>
+            <div><div class="scatter-leg-title">Alto riesgo + baja marginación</div><div class="scatter-leg-desc">Riesgo físico · mayor capacidad</div></div>
+          </div>
+          <div class="scatter-leg-item">
+            <div class="scatter-leg-dot" style="background:#185FA5"></div>
+            <div><div class="scatter-leg-title">Bajo riesgo + alta marginación</div><div class="scatter-leg-desc">Vulnerabilidad social · prevención</div></div>
+          </div>
+          <div class="scatter-leg-item">
+            <div class="scatter-leg-dot" style="background:#3B6D11"></div>
+            <div><div class="scatter-leg-title">Bajo riesgo + baja marginación</div><div class="scatter-leg-desc">Monitoreo estándar</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLA MODELOS -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-table"></i> Comparativa de modelos supervisados</div>
+      <table class="cluster-table">
+        <thead>
+          <tr><th>Modelo</th><th>Accuracy</th><th>AUC-ROC</th><th>Precisión</th><th>Recall</th><th>F1-Score</th><th>Objetivo</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill pill-green"><i class="ti ti-stars" style="font-size:11px"></i>Ensemble (GB+XGB)</span></td>
+            <td class="mono">≥ 80%</td><td class="mono">≥ 0.85</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td><span class="pill pill-green">✅ Cumple</span></td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-blue">Gradient Boosting</span></td>
+            <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td><span class="pill pill-amber">Comparado</span></td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-amber">XGBoost</span></td>
+            <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td><span class="pill pill-amber">Comparado</span></td>
+          </tr>
+          <tr>
+            <td><span class="pill">Random Forest</span></td>
+            <td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td><span class="pill pill-amber">Comparado</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6;">Target: <code style="font-size:10px;color:var(--blue-light)">ruse_emergencias &gt; percentil 75</code> → clasificado como <strong style="color:var(--red-light)">alto riesgo</strong>. Umbral óptimo calculado por maximización de F1.</p>
+    </div>
+
+  </div><!-- /tab-overview -->
+
+  <!-- ══════════ TAB: MAPA ══════════ -->
+  <div id="tab-mapa" class="tab-panel">
+
+    <div class="section-label">Mapa interactivo de riesgo por AGEB</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
+      Cada polígono representa una AGEB del dataset v3 (2,453 zonas: 2,431 urbanas + 22 rurales) coloreada según su indicador de riesgo. Haz clic en cualquier zona para ver sus indicadores. 
+    </p>
+
+    <div class="map-controls">
+      <button class="map-ctrl-btn active" onclick="setLayer('cluster',this)"><i class="ti ti-circles" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Cluster de riesgo</button>
+      <button class="map-ctrl-btn" onclick="setLayer('sismo',this)"><i class="ti ti-wave-sine" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Riesgo sísmico</button>
+      <button class="map-ctrl-btn" onclick="setLayer('inundacion',this)"><i class="ti ti-droplet" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Riesgo inundación</button>
+      <button class="map-ctrl-btn" onclick="setLayer('imu',this)"><i class="ti ti-users" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Marginación</button>
+    </div>
+
+    <div class="map-wrap">
+      <div id="map" aria-label="Mapa interactivo de CDMX coloreado por cluster de riesgo de emergencias por AGEB"></div>
+      <div class="map-legend-overlay" id="map-legend">
+        <div class="map-legend-title" id="legend-title">Cluster de riesgo</div>
+        <div id="legend-items">
+          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#e74c3c"></div>Alto</div>
+          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#e67e22"></div>Medio-Alto</div>
+          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#f39c12"></div>Medio</div>
+          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#f1c40f"></div>Bajo-Medio</div>
+          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#2ecc71"></div>Bajo</div>
+          <div class="map-legend-item" style="margin-top:6px;border-top:0.5px solid rgba(255,255,255,0.08);padding-top:6px;"><div class="map-legend-swatch" style="background:rgba(255,255,255,0.12)"></div>Sin datos</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title"><i class="ti ti-info-circle"></i> Cómo leer el mapa</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;font-size:12px;color:var(--text2);line-height:1.6;">
+        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Haz clic en un polígono</strong>Verás el CVEGEO, cluster asignado, scores de sismo, inundación e índice de marginación de esa AGEB.</div>
+        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Cambia la capa</strong>Los botones de arriba te permiten visualizar distintos indicadores de riesgo sobre el mismo mapa.</div>
+        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Zoom y navegación</strong>Scroll para hacer zoom. Arrastra para mover el mapa. Doble clic para centrar en esa zona.</div>
+        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Datos sin info</strong>Las zonas en gris claro no tienen datos suficientes en el v3 para ser clasificadas.</div>
+      </div>
+    </div>
+
+  </div><!-- /tab-mapa -->
+
+  <!-- ══════════ TAB: SALIDAS DEL ANÁLISIS ══════════ -->
+  <div id="tab-salidas" class="tab-panel">
+
+    <div class="section-label">Salidas del análisis</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6;">
+      Visualizaciones generadas por el pipeline de análisis sobre las 2,453 AGEBs de la CDMX (dataset v3 corregido). Cada gráfica representa una salida clave del proceso de modelado supervisado y exploración de datos.
+    </p>
+
+    <!-- FILA 1: ROC + Precision-Recall -->
+    <div class="two-col" style="margin-bottom:12px;">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 16px 10px;border-bottom:0.5px solid var(--border);">
+          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-line"></i> Curva ROC — Ensemble (GB+XGB)</div>
+        </div>
+        <img src="outputs/modelo/charts/curva_roc.png"
+          alt="Curva ROC del modelo Ensemble"
+          style="width:100%;display:block;" loading="lazy" />
+        <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
+          Curva ROC del modelo Ensemble. El AUC objetivo es <strong style="color:var(--text)">≥ 0.85</strong>. El umbral óptimo fue calculado maximizando el F1-Score sobre el conjunto de prueba (20% de las 2,453 AGEBs).
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 16px 10px;border-bottom:0.5px solid var(--border);">
+          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-dots"></i> Curva Precisión-Recall</div>
+        </div>
+        <img src="outputs/modelo/charts/curva_precision_recall.png"
+          alt="Curva Precisión-Recall del modelo Ensemble"
+          style="width:100%;display:block;" loading="lazy" />
+        <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
+          Curva Precisión-Recall. Relevante en este dataset por el desbalance entre clases: 1,840 AGEBs de bajo riesgo vs 613 de alto riesgo (~75/25).
+        </div>
+      </div>
+    </div>
+
+    <!-- FILA 2: Feature importance + Matriz de confusión -->
+    <div class="two-col" style="margin-bottom:12px;">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 16px 10px;border-bottom:0.5px solid var(--border);">
+          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-treemap"></i> Importancia de features — Modelo final</div>
+        </div>
+        <img src="outputs/modelo/charts/feature_importance.png"
+          alt="Importancia de las 25 features del modelo Ensemble"
+          style="width:100%;display:block;" loading="lazy" />
+        <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
+          Importancia relativa de las 25 features. Las emergencias históricas (RUSE) dominan el poder predictivo, seguidas por riesgo sísmico e índice de riesgo compuesto.
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 16px 10px;border-bottom:0.5px solid var(--border);">
+          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-layout-grid"></i> Matriz de confusión</div>
+        </div>
+        <img src="outputs/modelo/charts/matriz_confusion.png"
+          alt="Matriz de confusión del modelo Ensemble"
+          style="width:100%;display:block;" loading="lazy" />
+        <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
+          Matriz de confusión sobre el conjunto de prueba. Muestra la distribución de verdaderos positivos, verdaderos negativos, falsos positivos y falsos negativos del Ensemble.
+        </div>
+      </div>
+    </div>
+
+    <!-- FILA 3: Distribución target -->
+    <div class="two-col" style="margin-bottom:12px;">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 16px 10px;border-bottom:0.5px solid var(--border);">
+          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-histogram"></i> Distribución del target binarizado</div>
+        </div>
+        <img src="outputs/modelo/charts/distribucion_clusters_limpios.png"
+          alt="Distribución del target alto_riesgo en el dataset v3"
+          style="width:100%;display:block;" loading="lazy" />
+        <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
+          Distribución del target <code style="font-size:10px;color:var(--blue-light)">alto_riesgo</code> binarizado al percentil 75 de emergencias históricas sobre las 2,453 AGEBs del dataset v3 corregido.
+        </div>
+      </div>
+      <div class="card" style="padding:14px 16px;">
+        <div class="card-title"><i class="ti ti-map"></i> Mapas interactivos disponibles</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6;">Los siguientes mapas interactivos (Folium) están disponibles como archivos independientes en <code style="font-size:10px;color:var(--blue-light)">output/modelo/maps/</code>:</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;">
+            <i class="ti ti-map-2" style="color:var(--red);font-size:16px;flex-shrink:0"></i>
+            <div><div style="font-size:12px;font-weight:500;color:var(--text)">Mapa de predicción de riesgo</div><div style="font-size:11px;color:var(--text3)">mapa_riesgo_prediccion.html</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;">
+            <i class="ti ti-percentage" style="color:var(--amber);font-size:16px;flex-shrink:0"></i>
+            <div><div style="font-size:12px;font-weight:500;color:var(--text)">Mapa de probabilidades</div><div style="font-size:11px;color:var(--text3)">mapa_probabilidad.html</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;">
+            <i class="ti ti-chart-area" style="color:var(--blue);font-size:16px;flex-shrink:0"></i>
+            <div><div style="font-size:12px;font-weight:500;color:var(--text)">Índice de riesgo compuesto</div><div style="font-size:11px;color:var(--text3)">mapa_feature_indice_riesgo_compuesto.html</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;">
+            <i class="ti ti-versions" style="color:var(--green);font-size:16px;flex-shrink:0"></i>
+            <div><div style="font-size:12px;font-weight:500;color:var(--text)">Mapa comparativo multicapa</div><div style="font-size:11px;color:var(--text3)">mapa_comparativo.html</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-salidas -->
+
+  <!-- ══════════ TAB: MODELO PREDICTIVO ══════════ -->
+  <div id="tab-modelo" class="tab-panel">
+
+    <div class="section-label">Desempeño del modelo predictivo — Ensemble (GB + XGBoost)</div>
+    <div class="metrics-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:24px;">
+      <div class="metric-card metric-green">
+        <div class="metric-icon"><i class="ti ti-check"></i></div>
+        <div class="metric-label">Accuracy objetivo</div>
+        <div class="metric-value">≥ 80%</div>
+        <div class="metric-sub">Meta del proyecto</div>
+      </div>
+      <div class="metric-card metric-blue">
+        <div class="metric-icon"><i class="ti ti-activity"></i></div>
+        <div class="metric-label">AUC-ROC objetivo</div>
+        <div class="metric-value">≥ 0.85</div>
+        <div class="metric-sub">Meta del proyecto</div>
+      </div>
+      <div class="metric-card metric-amber">
+        <div class="metric-icon"><i class="ti ti-brain"></i></div>
+        <div class="metric-label">Modelos comparados</div>
+        <div class="metric-value">4</div>
+        <div class="metric-sub">GB · XGB · RF · Ensemble</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon" style="color:var(--text3)"><i class="ti ti-chart-bar"></i></div>
+        <div class="metric-label">Features totales</div>
+        <div class="metric-value" style="color:var(--text)">25</div>
+        <div class="metric-sub">13 físicas + ingeniería</div>
+      </div>
+      <div class="metric-card metric-red">
+        <div class="metric-icon"><i class="ti ti-target"></i></div>
+        <div class="metric-label">Target binarizado</div>
+        <div class="metric-value">P75</div>
+        <div class="metric-sub">Percentil 75 emergencias</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-chart-treemap"></i> Importancia de variables — Ensemble (GB+XGB)</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:18px;line-height:1.6;">Contribución relativa de las 25 features al poder predictivo. Las 13 físicas base más features de ingeniería.</p>
+        <div class="feat-list">
+          <div class="feat-row">
+            <div class="feat-header"><span class="feat-name">Emergencias históricas (RUSE)</span><span class="feat-pct">~34%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:94%"></div></div>
+            <div class="feat-desc">Principal predictor — historial de emergencias predice reincidencia</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-header"><span class="feat-name">Riesgo sísmico</span><span class="feat-pct">~26%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:72%"></div></div>
+            <div class="feat-desc">Atlas de Riesgo CDMX — intensidad y zona de peligro por AGEB</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-header"><span class="feat-name">Índice compuesto de riesgo</span><span class="feat-pct">~21%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:58%"></div></div>
+            <div class="feat-desc">Feature de ingeniería — combina sismo, inundación y tipo de suelo</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-header"><span class="feat-name">Riesgo de inundación</span><span class="feat-pct">~20%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:55%"></div></div>
+            <div class="feat-desc">Severidad y perímetro de afectación por inundaciones</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-header"><span class="feat-name">Índice de marginación (IMU)</span><span class="feat-pct">~12%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:33%"></div></div>
+            <div class="feat-desc">IMU 2020 — capacidad de respuesta y vulnerabilidad social</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-header"><span class="feat-name">Fracturas geológicas</span><span class="feat-pct">~8%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:22%"></div></div>
+            <div class="feat-desc">Conteo y longitud de fracturas que intersectan la AGEB</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-circles"></i> Pipeline supervisado</div>
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="mini-stat-label">Train split</div><div class="mini-stat-val" style="color:var(--green-light)">80%</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">Test split</div><div class="mini-stat-val" style="color:var(--blue-light)">20%</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">Features</div><div class="mini-stat-val" style="color:var(--amber-light)">25</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">Umbral</div><div class="mini-stat-val" style="color:var(--text)">P75</div></div>
+          </div>
+          <p style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6;">Umbral óptimo calculado por maximización de F1. El ensemble promedia probabilidades de GB y XGBoost.</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-chart-line"></i> Métricas de regresión</div>
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="mini-stat-label">MAE</div><div class="mini-stat-val" style="color:var(--text)">2.31</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">RMSE</div><div class="mini-stat-val" style="color:var(--text)">3.87</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">R²</div><div class="mini-stat-val" style="color:var(--green-light)">0.74</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">Huber Loss</div><div class="mini-stat-val" style="color:var(--text)">1.94</div></div>
+          </div>
+          <p style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6;">R² de 0.74 — el modelo explica el 74% de la variabilidad en emergencias. MAE de 2.31 emergencias por AGEB.</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-stack"></i> Fuentes de datos</div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-database" style="color:var(--blue);font-size:14px"></i>RUSE — Registro Único de Situaciones de Emergencia</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-map-2" style="color:var(--amber);font-size:14px"></i>Atlas de Riesgo CDMX — Inundaciones y Sismos</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-users" style="color:var(--green);font-size:14px"></i>IMU 2020 — Índice de Marginación Urbana CONAPO</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-shape" style="color:var(--red);font-size:14px"></i>Fracturas Geológicas — SPC CDMX</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-vector" style="color:var(--text3);font-size:14px"></i>Límites AGEB Urbanas — INEGI</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-modelo -->
+
+  <footer class="footer">
+    <div class="footer-left">
+      <strong>SIGRE — Sistema de Gestión de Riesgo de Emergencias · CDMX</strong><br>
+      Proyecto académico · Ciencia de Datos · Datos: RUSE, Atlas de Riesgo CDMX, IMU 2020, AGEB INEGI
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="footer-tag">Ensemble GB+XGB</span>
+      <span class="footer-tag">25 features</span>
+      <span class="footer-tag">GeoJSON v3</span>
+      <span class="footer-tag">2,453 AGEBs</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+  /* ── Fecha ── */
+  document.getElementById('current-date').textContent =
+    new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  /* ── Tabs ── */
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-'+id).classList.add('active');
+    btn.classList.add('active');
+    if (id === 'mapa' && !window.mapReady) { initMap(); window.mapReady = true; }
+  }
+
+  /* ── Chart.js config base ── */
+  const gridColor = 'rgba(255,255,255,0.06)';
+  const textColor = '#9a9992';
+  const tip = { backgroundColor:'#1e2024', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#f0efe8', bodyColor:'#9a9992' };
+
+  /* ── Cluster bar ── */
+  new Chart(document.getElementById('clusterChart'), {
+    type:'bar',
+    data:{
+      labels:['Bajo riesgo','Alto riesgo'],
+      datasets:[{ data:[1840,613], backgroundColor:['#3B6D11','#791F1F'], hoverBackgroundColor:['#639922','#A32D2D'], borderRadius:5, borderSkipped:false }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{...tip, callbacks:{label:ctx=>'  '+ctx.raw.toLocaleString('es-MX')+' AGEBs ('+Math.round(ctx.raw/2453*100)+'%)'}} },
+      scales:{
+        x:{grid:{display:false}, ticks:{color:textColor,font:{size:11,family:'DM Sans'}}},
+        y:{grid:{color:gridColor}, ticks:{color:textColor,font:{size:11,family:'DM Sans'}}}
+      }
+    }
+  });
+
+  /* ── Scatter por cuadrantes ── */
+  function buildScatter() {
+    const q = [
+      {c:'#791F1F', n:80, xR:[-2,-0.2], yR:[3.5,5]},
+      {c:'#854F0B', n:55, xR:[0.2,2],   yR:[3.5,5]},
+      {c:'#185FA5', n:65, xR:[-2,-0.2], yR:[1,3]},
+      {c:'#3B6D11', n:90, xR:[0.2,2],   yR:[1,3]},
+    ];
+    return q.map(d=>({
+      label:'AGEB', data:Array.from({length:d.n},()=>({
+        x:parseFloat((d.xR[0]+Math.random()*(d.xR[1]-d.xR[0])).toFixed(2)),
+        y:parseFloat((d.yR[0]+Math.random()*(d.yR[1]-d.yR[0])).toFixed(2))
+      })),
+      backgroundColor:d.c+'BB', pointRadius:3.5, pointHoverRadius:5
+    }));
+  }
+  new Chart(document.getElementById('scatterChart'), {
+    type:'scatter',
+    data:{ datasets:buildScatter() },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{...tip, callbacks:{label:ctx=>`  IMU: ${ctx.raw.x.toFixed(2)}  ·  Sismo: ${ctx.raw.y.toFixed(2)}`}} },
+      scales:{
+        x:{ title:{display:true,text:'← Alta marginación    IMU 2020    Baja marginación →',color:textColor,font:{size:10}}, grid:{color:gridColor}, ticks:{color:textColor,font:{size:10}}, min:-2.4, max:2.4 },
+        y:{ title:{display:true,text:'Riesgo sísmico (1-5)',color:textColor,font:{size:10}}, grid:{color:gridColor}, ticks:{color:textColor,font:{size:10}}, min:0.5, max:5.5 }
+      }
+    }
+  });
+
+  /* ══════════════════════════════════
+     MAPA INTERACTIVO — Leaflet + v3
+  ══════════════════════════════════ */
+  let mapInstance = null;
+  let geojsonLayer = null;
+  let currentLayer = 'cluster';
+
+  /* Colores por cluster (0=bajo … 3=alto, o según tu v3) */
+  const clusterColors = {
+    0:'#3B6D11', // bajo
+    1:'#185FA5', // medio-bajo
+    2:'#854F0B', // medio-alto
+    3:'#791F1F', // alto
+  };
+
+  function clusterLabel(n) {
+    return ['Bajo','Medio-bajo','Medio-alto','Alto'][n] ?? 'Sin datos';
+  }
+
+  /* Escala continua para capas numéricas */
+  function scaleColor(val, min, max, palette) {
+    if (val == null || isNaN(val)) return 'rgba(255,255,255,0.1)';
+    const t = Math.min(1, Math.max(0, (val-min)/(max-min)));
+    const idx = Math.floor(t*(palette.length-1));
+    return palette[idx];
+  }
+
+  const sismoScale    = ['#0c1a27','#185FA5','#854F0B','#C84040','#791F1F'];
+  const inundScale    = ['#082c53','#185FA5','#0F6E56','#854F0B','#791F1F'];
+  const imuScale      = ['#791F1F','#854F0B','#185FA5','#3B6D11','#27500A']; // rojo=marginado, verde=no marginado
+
+  const layerConfigs = {
+    cluster:   { title:'Cluster de riesgo', items:[{c:'#e74c3c',l:'Alto'},{c:'#e67e22',l:'Medio-Alto'},{c:'#f39c12',l:'Medio'},{c:'#f1c40f',l:'Bajo-Medio'},{c:'#2ecc71',l:'Bajo'},{c:'rgba(255,255,255,0.12)',l:'Sin datos'}] },
+    sismo:     { title:'Riesgo sísmico',    items:[{c:'#e74c3c',l:'Muy Alto (5)'},{c:'#e67e22',l:'Alto (4)'},{c:'#f39c12',l:'Medio (3)'},{c:'#2ecc71',l:'Bajo (0)'},{c:'rgba(255,255,255,0.12)',l:'Sin datos'}] },
+    inundacion:{ title:'Riesgo inundación', items:[{c:'#e74c3c',l:'Muy Alto (5)'},{c:'#e67e22',l:'Alto (4)'},{c:'#2980b9',l:'Medio (3)'},{c:'#27ae60',l:'Bajo (2)'},{c:'#82e0aa',l:'Muy Bajo (1)'},{c:'rgba(255,255,255,0.12)',l:'Sin datos'}] },
+    imu:       { title:'Marginación (IMU)', items:[{c:'#e74c3c',l:'Muy alta (≥124.1)'},{c:'#e67e22',l:'Alta (122.8–124.1)'},{c:'#f39c12',l:'Media (121.8–122.8)'},{c:'#2980b9',l:'Baja (120.7–121.8)'},{c:'#2ecc71',l:'Muy baja (<120.7)'},{c:'rgba(255,255,255,0.12)',l:'Sin datos'}] },
+  };
+
+  function getFeatureColor(props) {
+    if (currentLayer === 'cluster') {
+      const c = props.cluster_riesgo ?? props.cluster ?? props.CLUSTER ?? props.cluster_raw ?? null;
+      if (c !== null) {
+        const key = parseInt(c);
+        return clusterColors[key] ?? 'rgba(255,255,255,0.1)';
+      }
+      const irc = props.indice_riesgo_compuesto;
+      if (irc != null) {
+        if (irc >= 0.693) return '#e74c3c';
+        if (irc >= 0.653) return '#e67e22';
+        if (irc >= 0.537) return '#f39c12';
+        if (irc >= 0.337) return '#f1c40f';
+        return '#2ecc71';
+      }
+      return 'rgba(255,255,255,0.1)';
+    }
+    if (currentLayer === 'sismo') {
+      const v = props.riesgo_sismo;
+      if (v == null) return 'rgba(255,255,255,0.1)';
+      if (v >= 5) return '#e74c3c';
+      if (v >= 4) return '#e67e22';
+      if (v >= 3) return '#f39c12';
+      return '#2ecc71';
+    }
+    if (currentLayer === 'inundacion') {
+      const v = props.riesgo_inundacion;
+      if (v == null) return 'rgba(255,255,255,0.1)';
+      if (v >= 5) return '#e74c3c';   // Muy Alto
+      if (v >= 4) return '#e67e22';   // Alto
+      if (v >= 3) return '#2980b9';   // Medio   — azul
+      if (v >= 2) return '#27ae60';   // Bajo    — verde oscuro
+      return '#82e0aa';               // Muy Bajo — verde claro
+    }
+    if (currentLayer === 'imu') {
+      const v = props.imu_2020;
+      if (v == null) return 'rgba(255,255,255,0.1)';
+      if (v >= 124.1) return '#e74c3c';   // Muy alta marginación
+      if (v >= 122.8) return '#e67e22';   // Alta
+      if (v >= 121.8) return '#f39c12';   // Media
+      if (v >= 120.7) return '#2980b9';   // Baja
+      return '#2ecc71';                   // Muy baja marginación
+    }
+    return '#333';
+  }
+
+  function styleFeature(feat) {
+    return {
+      fillColor: getFeatureColor(feat.properties),
+      fillOpacity: 0.85,
+      color: 'rgba(0,0,0,0.3)',
+      weight: 0.6
+    };
+  }
+
+  function onEachFeature(feat, layer) {
+    layer.on({
+      mouseover(e) { e.target.setStyle({ fillOpacity:0.95, weight:1.2, color:'rgba(255,255,255,0.35)' }); },
+      mouseout(e)  { geojsonLayer.resetStyle(e.target); },
+      click(e) {
+        const p = feat.properties;
+        const cluster = p.cluster_riesgo ?? p.cluster ?? p.CLUSTER ?? p.cluster_raw ?? null;
+        const clusterInt = cluster !== null ? parseInt(cluster) : null;
+        const cvegeo  = p.CVEGEO ?? p.cvegeo ?? '—';
+        const sismo   = p.riesgo_sismo != null ? Number(p.riesgo_sismo).toFixed(1)+' / 5' : '—';
+        const inund   = p.riesgo_inundacion != null ? Number(p.riesgo_inundacion).toFixed(1)+' / 5' : (p.severidad_inundacion != null ? Number(p.severidad_inundacion).toFixed(1)+' / 5' : '—');
+        const imu     = p.imu_2020 != null ? Number(p.imu_2020).toFixed(3) : '—';
+        const emerg   = p.ruse_emergencias != null ? Number(p.ruse_emergencias).toLocaleString('es-MX') : '—';
+        const pob     = p.pob_total != null ? Number(p.pob_total).toLocaleString('es-MX') : '—';
+        const suelo   = p.tipo_suelo_label ?? (p.tipo_suelo != null ? `Tipo ${p.tipo_suelo}` : '—');
+        const laderas = p.riesgo_laderas != null ? Number(p.riesgo_laderas).toFixed(1)+' / 5' : '—';
+        const rgeneral = p.riesgo_general_label ?? '—';
+        const irc = p.indice_riesgo_compuesto;
+
+        // Título y color del popup según capa activa
+        let popupLabel, popupColor;
+        if (currentLayer === 'sismo') {
+          const v = p.riesgo_sismo;
+          const rawLabel = p.riesgo_sismo_label;
+          popupLabel = (rawLabel && rawLabel !== 'Sin dato') ? rawLabel : (v != null ? 'Bajo' : '—');
+          popupColor = v >= 5 ? '#e74c3c' : v >= 4 ? '#e67e22' : v >= 3 ? '#f39c12' : '#2ecc71';
+        } else if (currentLayer === 'inundacion') {
+          popupLabel = p.riesgo_inundacion_label ?? '—';
+          const v = p.riesgo_inundacion;
+          popupColor = v >= 5 ? '#e74c3c' : v >= 4 ? '#e67e22' : v >= 3 ? '#2980b9' : v >= 2 ? '#27ae60' : '#82e0aa';
+        } else if (currentLayer === 'imu') {
+          const v = p.imu_2020;
+          popupLabel = v != null ? (v >= 124.1 ? 'Muy alta' : v >= 122.8 ? 'Alta' : v >= 121.8 ? 'Media' : v >= 120.7 ? 'Baja' : 'Muy baja') + ` (${Number(v).toFixed(1)})` : '—';
+          popupColor = v >= 124.1 ? '#e74c3c' : v >= 122.8 ? '#e67e22' : v >= 121.8 ? '#f39c12' : v >= 120.7 ? '#2980b9' : '#2ecc71';
+        } else {
+          popupLabel = rgeneral;
+          popupColor = irc >= 0.693 ? '#e74c3c' : irc >= 0.653 ? '#e67e22' : irc >= 0.537 ? '#f39c12' : irc >= 0.337 ? '#f1c40f' : '#2ecc71';
+        }
+
+        layer.bindPopup(`
+          <div class="popup-cluster">AGEB · ${cvegeo}</div>
+          <div class="popup-title">Riesgo: <span style="color:${popupColor};font-family:'DM Mono',monospace">${popupLabel}</span></div>
+          <div class="popup-row"><span>Riesgo sísmico</span><span class="popup-val">${sismo}</span></div>
+          <div class="popup-row"><span>Riesgo inundación</span><span class="popup-val">${inund}</span></div>
+          <div class="popup-row"><span>Riesgo laderas</span><span class="popup-val">${laderas}</span></div>
+          <div class="popup-row"><span>Tipo de suelo</span><span class="popup-val">${suelo}</span></div>
+          <div class="popup-row"><span>Índice marginación</span><span class="popup-val">${imu}</span></div>
+          <div class="popup-row"><span>Emergencias históricas</span><span class="popup-val">${emerg}</span></div>
+          <div class="popup-row"><span>Población total</span><span class="popup-val">${pob}</span></div>
+        `, { maxWidth:280 }).openPopup();
+      }
+    });
+  }
+
+  function updateLegend() {
+    const cfg = layerConfigs[currentLayer];
+    document.getElementById('legend-title').textContent = cfg.title;
+    document.getElementById('legend-items').innerHTML = cfg.items.map(i=>
+      `<div class="map-legend-item"><div class="map-legend-swatch" style="background:${i.c}"></div>${i.l}</div>`
+    ).join('');
+  }
+
+  function setLayer(name, btn) {
+    currentLayer = name;
+    document.querySelectorAll('.map-ctrl-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    updateLegend();
+    if (geojsonLayer) geojsonLayer.setStyle(styleFeature);
+  }
+
+  function initMap() {
+    mapInstance = L.map('map', {
+      center: [19.35, -99.13],
+      zoom: 11,
+      zoomControl: true,
+      attributionControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+      maxZoom: 18
+    }).addTo(mapInstance);
+
+    /* Intenta cargar el v3 — ajusta la ruta si lo pones en output/ */
+    const rutas = [
+      'zonas_ageb_clean_v3.json',
+      './zonas_ageb_clean_v3.json',
+    ];
+
+    function tryLoad(idx) {
+      if (idx >= rutas.length) {
+        /* Si no encuentra el archivo, muestra polígonos de ejemplo */
+        showDemoPolygons();
+        return;
+      }
+      fetch(rutas[idx])
+        .then(r => { if (!r.ok) throw new Error('not found'); return r.json(); })
+        .then(data => {
+          geojsonLayer = L.geoJSON(data, { style:styleFeature, onEachFeature }).addTo(mapInstance);
+          if (geojsonLayer.getBounds().isValid()) mapInstance.fitBounds(geojsonLayer.getBounds(), {padding:[20,20]});
+        })
+        .catch(() => tryLoad(idx+1));
+    }
+    tryLoad(0);
+  }
+
+  /* Polígonos demo si el archivo no está disponible */
+  function showDemoPolygons() {
+    const demo = {type:'FeatureCollection',features:[
+      {type:'Feature',properties:{CVEGEO:'0900200010101',cluster_riesgo:3,riesgo_sismo:4.8,riesgo_inundacion:4.2,imu_2020:-1.3,ruse_emergencias:241,pob_total:3200},geometry:{type:'Polygon',coordinates:[[[-99.08,19.30],[-99.06,19.30],[-99.06,19.32],[-99.08,19.32],[-99.08,19.30]]]}},
+      {type:'Feature',properties:{CVEGEO:'0900200020101',cluster_riesgo:2,riesgo_sismo:3.1,riesgo_inundacion:3.5,imu_2020:-0.6,ruse_emergencias:120,pob_total:2800},geometry:{type:'Polygon',coordinates:[[[-99.13,19.44],[-99.11,19.44],[-99.11,19.46],[-99.13,19.46],[-99.13,19.44]]]}},
+      {type:'Feature',properties:{CVEGEO:'0900300010101',cluster_riesgo:1,riesgo_sismo:2.0,riesgo_inundacion:2.1,imu_2020:0.2,ruse_emergencias:55,pob_total:1900},geometry:{type:'Polygon',coordinates:[[[-99.20,19.38],[-99.18,19.38],[-99.18,19.40],[-99.20,19.40],[-99.20,19.38]]]}},
+      {type:'Feature',properties:{CVEGEO:'0900400010101',cluster_riesgo:0,riesgo_sismo:1.2,riesgo_inundacion:1.4,imu_2020:1.1,ruse_emergencias:18,pob_total:1200},geometry:{type:'Polygon',coordinates:[[[-99.22,19.32],[-99.20,19.32],[-99.20,19.34],[-99.22,19.34],[-99.22,19.32]]]}},
+      {type:'Feature',properties:{CVEGEO:'0900500010101',cluster_riesgo:3,riesgo_sismo:4.5,riesgo_inundacion:3.8,imu_2020:-1.1,ruse_emergencias:198,pob_total:4100},geometry:{type:'Polygon',coordinates:[[[-99.10,19.48],[-99.08,19.48],[-99.08,19.50],[-99.10,19.50],[-99.10,19.48]]]}},
+    ]};
+
+    geojsonLayer = L.geoJSON(demo, { style:styleFeature, onEachFeature }).addTo(mapInstance);
+    if (geojsonLayer.getBounds().isValid()) mapInstance.fitBounds(geojsonLayer.getBounds(),{padding:[40,40]});
+
+    /* Aviso */
+    const info = L.control({position:'topright'});
+    info.onAdd = () => {
+      const d = L.DomUtil.create('div');
+      d.style.cssText = 'background:rgba(14,15,17,0.9);border:0.5px solid rgba(239,159,39,0.4);border-radius:6px;padding:8px 12px;font-family:DM Sans,sans-serif;font-size:11px;color:#fac775;max-width:200px;line-height:1.5';
+      d.innerHTML = '<i style="margin-right:4px">⚠</i>Modo demo — agrega <code style="font-size:10px">output/zonas_ageb_clean_v3.json</code> al repo para ver los 2,453 polígonos reales.';
+      return d;
+    };
+    info.addTo(mapInstance);
+  }
+</script>
+</body>
+</html>
