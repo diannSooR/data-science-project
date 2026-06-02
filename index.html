@@ -422,9 +422,11 @@
   <div id="tab-mapa" class="tab-panel">
 
     <div class="section-label">Mapas interactivos de riesgo por AGEB</div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
-      Visualizaciones interactivas sobre las 2,453 AGEBs de la CDMX. Selecciona el mapa que quieres explorar.
-    </p>
+
+    <!-- Descripción dinámica -->
+    <div id="mapa-desc" style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;transition:all 0.2s;">
+      <strong style="color:var(--text)">Predicción de riesgo:</strong> Clasifica cada AGEB como alto o bajo riesgo según el modelo Ensemble (GB+XGB). Las zonas en rojo superan el umbral del percentil 75 de emergencias históricas — 613 de las 2,453 AGEBs fueron identificadas como prioritarias.
+    </div>
 
     <div class="map-controls">
       <button class="map-ctrl-btn active" onclick="switchMapa('prediccion',this)"><i class="ti ti-alert-triangle" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Predicción de riesgo</button>
@@ -496,7 +498,7 @@
           alt="Curva ROC del modelo Ensemble"
           style="width:100%;display:block;" loading="lazy" />
         <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
-          Curva ROC del modelo Ensemble. El AUC objetivo es <strong style="color:var(--text)">≥ 0.85</strong>. El umbral óptimo fue calculado maximizando el F1-Score sobre el conjunto de prueba (20% de las 2,453 AGEBs).
+          AUC = <strong style="color:var(--green-light)">0.9422</strong> — muy por encima del objetivo ≥ 0.85. La curva sube rápidamente hacia la esquina superior izquierda, indicando excelente capacidad de discriminación entre zonas de alto y bajo riesgo.
         </div>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
@@ -507,7 +509,7 @@
           alt="Curva Precisión-Recall del modelo Ensemble"
           style="width:100%;display:block;" loading="lazy" />
         <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
-          Curva Precisión-Recall. Relevante en este dataset por el desbalance entre clases: 1,840 AGEBs de bajo riesgo vs 613 de alto riesgo (~75/25).
+          La precisión se mantiene alta (~85-90%) hasta un recall de 0.6, lo que indica que el modelo es conservador: cuando predice alto riesgo, acierta la mayoría de las veces.
         </div>
       </div>
     </div>
@@ -516,13 +518,13 @@
     <div class="two-col" style="margin-bottom:12px;">
       <div class="card" style="padding:0;overflow:hidden;">
         <div style="padding:14px 16px 10px;border-bottom:0.5px solid var(--border);">
-          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-treemap"></i> Importancia de features — Modelo final</div>
+          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-treemap"></i> Importancia de features — Top 20</div>
         </div>
         <img src="outputs/modelo/charts/feature_importance.png"
           alt="Importancia de las 25 features del modelo Ensemble"
           style="width:100%;display:block;" loading="lazy" />
         <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
-          Importancia relativa de las 25 features. Las emergencias históricas (RUSE) dominan el poder predictivo, seguidas por riesgo sísmico e índice de riesgo compuesto.
+          Las features de ingeniería dominan: <strong style="color:var(--text)">indice_x_area</strong> e <strong style="color:var(--text)">indice_riesgo_compuesto</strong> concentran más del 25% de la importancia total, superando a las variables físicas brutas.
         </div>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
@@ -533,44 +535,33 @@
           alt="Matriz de confusión del modelo Ensemble"
           style="width:100%;display:block;" loading="lazy" />
         <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
-          Matriz de confusión sobre el conjunto de prueba. Muestra la distribución de verdaderos positivos, verdaderos negativos, falsos positivos y falsos negativos del Ensemble.
+          338 VP + 101 VN correctos. Solo <strong style="color:var(--red-light)">17 falsos negativos</strong> — zonas de alto riesgo clasificadas como seguras, el error más crítico en un sistema de gestión de emergencias.
         </div>
       </div>
     </div>
 
-    <!-- FILA 3: Distribución target -->
+    <!-- FILA 3: Comparativa modelos + Comparativa ROC -->
     <div class="two-col" style="margin-bottom:12px;">
       <div class="card" style="padding:0;overflow:hidden;">
         <div style="padding:14px 16px 10px;border-bottom:0.5px solid var(--border);">
-          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-histogram"></i> Distribución del target binarizado</div>
+          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-bar"></i> Comparativa de modelos</div>
         </div>
-        <img src="outputs/modelo/charts/distribucion_clusters_limpios.png"
-          alt="Distribución del target alto_riesgo en el dataset v3"
+        <img src="outputs/modelo/comparativas/comparativa_modelos.png"
+          alt="Comparativa de métricas entre los 4 modelos"
           style="width:100%;display:block;" loading="lazy" />
         <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
-          Distribución del target <code style="font-size:10px;color:var(--blue-light)">alto_riesgo</code> binarizado al percentil 75 de emergencias históricas sobre las 2,453 AGEBs del dataset v3 corregido.
+          El Ensemble (naranja) supera a los modelos individuales en Recall y F1. Todos superan los objetivos de Accuracy ≥ 80% y AUC-ROC ≥ 0.85, validando el diseño del pipeline.
         </div>
       </div>
-      <div class="card" style="padding:14px 16px;">
-        <div class="card-title"><i class="ti ti-map"></i> Mapas interactivos disponibles</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6;">Los siguientes mapas interactivos (Folium) están disponibles como archivos independientes en <code style="font-size:10px;color:var(--blue-light)">output/modelo/maps/</code>:</p>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;">
-            <i class="ti ti-map-2" style="color:var(--red);font-size:16px;flex-shrink:0"></i>
-            <div><div style="font-size:12px;font-weight:500;color:var(--text)">Mapa de predicción de riesgo</div><div style="font-size:11px;color:var(--text3)">mapa_riesgo_prediccion.html</div></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;">
-            <i class="ti ti-percentage" style="color:var(--amber);font-size:16px;flex-shrink:0"></i>
-            <div><div style="font-size:12px;font-weight:500;color:var(--text)">Mapa de probabilidades</div><div style="font-size:11px;color:var(--text3)">mapa_probabilidad.html</div></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;">
-            <i class="ti ti-chart-area" style="color:var(--blue);font-size:16px;flex-shrink:0"></i>
-            <div><div style="font-size:12px;font-weight:500;color:var(--text)">Índice de riesgo compuesto</div><div style="font-size:11px;color:var(--text3)">mapa_feature_indice_riesgo_compuesto.html</div></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;">
-            <i class="ti ti-versions" style="color:var(--green);font-size:16px;flex-shrink:0"></i>
-            <div><div style="font-size:12px;font-weight:500;color:var(--text)">Mapa comparativo multicapa</div><div style="font-size:11px;color:var(--text3)">mapa_comparativo.html</div></div>
-          </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 16px 10px;border-bottom:0.5px solid var(--border);">
+          <div class="card-title" style="margin-bottom:0;"><i class="ti ti-chart-line"></i> Comparativa ROC — todos los modelos</div>
+        </div>
+        <img src="outputs/modelo/comparativas/comparativa_roc_todos.png"
+          alt="Comparativa de curvas ROC entre GB, XGBoost, Random Forest y Ensemble"
+          style="width:100%;display:block;" loading="lazy" />
+        <div style="padding:10px 16px 14px;font-size:12px;color:var(--text2);line-height:1.6;">
+          GB (0.9399), XGBoost (0.9421), Random Forest (0.9148) y Ensemble (0.9422). El Ensemble obtiene el AUC más alto al promediar las probabilidades de GB y XGB.
         </div>
       </div>
     </div>
@@ -584,15 +575,15 @@
     <div class="metrics-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:24px;">
       <div class="metric-card metric-green">
         <div class="metric-icon"><i class="ti ti-check"></i></div>
-        <div class="metric-label">Accuracy objetivo</div>
-        <div class="metric-value">≥ 80%</div>
-        <div class="metric-sub">Meta del proyecto</div>
+        <div class="metric-label">Accuracy</div>
+        <div class="metric-value">88%</div>
+        <div class="metric-sub">✅ Supera objetivo ≥ 80%</div>
       </div>
       <div class="metric-card metric-blue">
         <div class="metric-icon"><i class="ti ti-activity"></i></div>
-        <div class="metric-label">AUC-ROC objetivo</div>
-        <div class="metric-value">≥ 0.85</div>
-        <div class="metric-sub">Meta del proyecto</div>
+        <div class="metric-label">AUC-ROC</div>
+        <div class="metric-value">0.9422</div>
+        <div class="metric-sub">✅ Supera objetivo ≥ 0.85</div>
       </div>
       <div class="metric-card metric-amber">
         <div class="metric-icon"><i class="ti ti-brain"></i></div>
@@ -617,37 +608,37 @@
     <div class="two-col">
       <div class="card">
         <div class="card-title"><i class="ti ti-chart-treemap"></i> Importancia de variables — Ensemble (GB+XGB)</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:18px;line-height:1.6;">Contribución relativa de las 25 features al poder predictivo. Las 13 físicas base más features de ingeniería.</p>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:18px;line-height:1.6;">Top 20 features por importancia. Las primeras 3 concentran más del 30% del poder predictivo total.</p>
         <div class="feat-list">
           <div class="feat-row">
-            <div class="feat-header"><span class="feat-name">Emergencias históricas (RUSE)</span><span class="feat-pct">~34%</span></div>
-            <div class="feat-track"><div class="feat-fill" style="width:94%"></div></div>
-            <div class="feat-desc">Principal predictor — historial de emergencias predice reincidencia</div>
+            <div class="feat-header"><span class="feat-name">indice_x_area</span><span class="feat-pct">12.8%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:100%"></div></div>
+            <div class="feat-desc">Feature de ingeniería — índice de riesgo ponderado por área de la AGEB</div>
           </div>
           <div class="feat-row">
-            <div class="feat-header"><span class="feat-name">Riesgo sísmico</span><span class="feat-pct">~26%</span></div>
-            <div class="feat-track"><div class="feat-fill" style="width:72%"></div></div>
-            <div class="feat-desc">Atlas de Riesgo CDMX — intensidad y zona de peligro por AGEB</div>
+            <div class="feat-header"><span class="feat-name">indice_riesgo_compuesto</span><span class="feat-pct">12.2%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:95%"></div></div>
+            <div class="feat-desc">Combinación de riesgo sísmico, inundación y tipo de suelo geotécnico</div>
           </div>
           <div class="feat-row">
-            <div class="feat-header"><span class="feat-name">Índice compuesto de riesgo</span><span class="feat-pct">~21%</span></div>
-            <div class="feat-track"><div class="feat-fill" style="width:58%"></div></div>
-            <div class="feat-desc">Feature de ingeniería — combina sismo, inundación y tipo de suelo</div>
+            <div class="feat-header"><span class="feat-name">imu_x_indice</span><span class="feat-pct">9.3%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:73%"></div></div>
+            <div class="feat-desc">Interacción entre marginación urbana e índice de riesgo compuesto</div>
           </div>
           <div class="feat-row">
-            <div class="feat-header"><span class="feat-name">Riesgo de inundación</span><span class="feat-pct">~20%</span></div>
-            <div class="feat-track"><div class="feat-fill" style="width:55%"></div></div>
-            <div class="feat-desc">Severidad y perímetro de afectación por inundaciones</div>
+            <div class="feat-header"><span class="feat-name">area_total / log_area</span><span class="feat-pct">6.3%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:49%"></div></div>
+            <div class="feat-desc">Tamaño físico de la AGEB — zonas más grandes concentran más emergencias</div>
           </div>
           <div class="feat-row">
-            <div class="feat-header"><span class="feat-name">Índice de marginación (IMU)</span><span class="feat-pct">~12%</span></div>
+            <div class="feat-header"><span class="feat-name">riesgo_sismo</span><span class="feat-pct">6.0%</span></div>
+            <div class="feat-track"><div class="feat-fill" style="width:47%"></div></div>
+            <div class="feat-desc">Intensidad sísmica del Atlas de Riesgo CDMX por AGEB</div>
+          </div>
+          <div class="feat-row">
+            <div class="feat-header"><span class="feat-name">imu_2020</span><span class="feat-pct">4.2%</span></div>
             <div class="feat-track"><div class="feat-fill" style="width:33%"></div></div>
-            <div class="feat-desc">IMU 2020 — capacidad de respuesta y vulnerabilidad social</div>
-          </div>
-          <div class="feat-row">
-            <div class="feat-header"><span class="feat-name">Fracturas geológicas</span><span class="feat-pct">~8%</span></div>
-            <div class="feat-track"><div class="feat-fill" style="width:22%"></div></div>
-            <div class="feat-desc">Conteo y longitud de fracturas que intersectan la AGEB</div>
+            <div class="feat-desc">Índice de Marginación Urbana CONAPO 2020</div>
           </div>
         </div>
       </div>
@@ -664,14 +655,14 @@
           <p style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6;">Umbral óptimo calculado por maximización de F1. El ensemble promedia probabilidades de GB y XGBoost.</p>
         </div>
         <div class="card">
-          <div class="card-title"><i class="ti ti-chart-line"></i> Métricas de regresión</div>
+          <div class="card-title"><i class="ti ti-chart-line"></i> Métricas del Ensemble</div>
           <div class="mini-stats">
-            <div class="mini-stat"><div class="mini-stat-label">MAE</div><div class="mini-stat-val" style="color:var(--text)">2.31</div></div>
-            <div class="mini-stat"><div class="mini-stat-label">RMSE</div><div class="mini-stat-val" style="color:var(--text)">3.87</div></div>
-            <div class="mini-stat"><div class="mini-stat-label">R²</div><div class="mini-stat-val" style="color:var(--green-light)">0.74</div></div>
-            <div class="mini-stat"><div class="mini-stat-label">Huber Loss</div><div class="mini-stat-val" style="color:var(--text)">1.94</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">Verdaderos negativos</div><div class="mini-stat-val" style="color:var(--green-light)">338</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">Verdaderos positivos</div><div class="mini-stat-val" style="color:var(--green-light)">101</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">Falsos positivos</div><div class="mini-stat-val" style="color:var(--amber-light)">35</div></div>
+            <div class="mini-stat"><div class="mini-stat-label">Falsos negativos</div><div class="mini-stat-val" style="color:var(--red-light)">17</div></div>
           </div>
-          <p style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6;">R² de 0.74 — el modelo explica el 74% de la variabilidad en emergencias. MAE de 2.31 emergencias por AGEB.</p>
+          <p style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6;">Solo 17 zonas de alto riesgo fueron clasificadas incorrectamente como seguras — el error más crítico para este tipo de sistema.</p>
         </div>
         <div class="card">
           <div class="card-title"><i class="ti ti-stack"></i> Fuentes de datos</div>
@@ -716,11 +707,20 @@
   }
 
   /* ── Switch entre mapas ── */
+  const mapaDescs = {
+    prediccion: '<strong style="color:var(--text)">Predicción de riesgo:</strong> Clasifica cada AGEB como alto o bajo riesgo según el modelo Ensemble (GB+XGB). Las zonas en rojo superan el umbral del percentil 75 de emergencias históricas — 613 de las 2,453 AGEBs fueron identificadas como prioritarias.',
+    probabilidad: '<strong style="color:var(--text)">Probabilidades:</strong> Muestra la probabilidad continua de alto riesgo por AGEB. A diferencia de la clasificación binaria, permite ver qué tan cerca está cada zona del umbral de decisión — útil para identificar AGEBs en el límite que requieren monitoreo especial.',
+    compuesto: '<strong style="color:var(--text)">Índice de riesgo compuesto:</strong> Combina riesgo sísmico, severidad de inundación y tipo de suelo geotécnico en un solo índice por AGEB. Es una de las features más importantes del modelo (12.2% de importancia) y refleja la vulnerabilidad física del territorio.',
+    comparativo: '<strong style="color:var(--text)">Mapa comparativo multicapa:</strong> Permite explorar y comparar distintas variables de riesgo sobre el mismo mapa. Útil para identificar zonas donde múltiples factores de riesgo se superponen, lo que indica mayor urgencia de intervención.',
+    marginacion: '<strong style="color:var(--text)">Marginación urbana (IMU 2020):</strong> Índice de Marginación Urbana del CONAPO. Refleja la vulnerabilidad social de cada AGEB — las zonas de alta marginación tienen menor capacidad de respuesta ante emergencias, lo que amplifica el impacto del riesgo físico.'
+  };
+
   function switchMapa(id, btn) {
     document.querySelectorAll('.mapa-panel').forEach(p => p.style.display = 'none');
     document.querySelectorAll('.map-ctrl-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('mapa-'+id).style.display = 'block';
     btn.classList.add('active');
+    document.getElementById('mapa-desc').innerHTML = mapaDescs[id] || '';
     if (id === 'marginacion' && !window.mapReady) { initMap(); window.mapReady = true; }
   }
 
