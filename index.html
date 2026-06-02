@@ -421,40 +421,58 @@
   <!-- ══════════ TAB: MAPA ══════════ -->
   <div id="tab-mapa" class="tab-panel">
 
-    <div class="section-label">Mapa interactivo de riesgo por AGEB</div>
+    <div class="section-label">Mapas interactivos de riesgo por AGEB</div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
-      Cada polígono representa una AGEB del dataset v3 (2,453 zonas: 2,431 urbanas + 22 rurales) coloreada según su indicador de riesgo. Haz clic en cualquier zona para ver sus indicadores. 
+      Visualizaciones interactivas sobre las 2,453 AGEBs de la CDMX. Selecciona el mapa que quieres explorar.
     </p>
 
     <div class="map-controls">
-      <button class="map-ctrl-btn active" onclick="setLayer('cluster',this)"><i class="ti ti-circles" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Cluster de riesgo</button>
-      <button class="map-ctrl-btn" onclick="setLayer('sismo',this)"><i class="ti ti-wave-sine" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Riesgo sísmico</button>
-      <button class="map-ctrl-btn" onclick="setLayer('inundacion',this)"><i class="ti ti-droplet" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Riesgo inundación</button>
-      <button class="map-ctrl-btn" onclick="setLayer('imu',this)"><i class="ti ti-users" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Marginación</button>
+      <button class="map-ctrl-btn active" onclick="switchMapa('prediccion',this)"><i class="ti ti-alert-triangle" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Predicción de riesgo</button>
+      <button class="map-ctrl-btn" onclick="switchMapa('probabilidad',this)"><i class="ti ti-percentage" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Probabilidades</button>
+      <button class="map-ctrl-btn" onclick="switchMapa('compuesto',this)"><i class="ti ti-layers" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Índice compuesto</button>
+      <button class="map-ctrl-btn" onclick="switchMapa('comparativo',this)"><i class="ti ti-versions" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Comparativo</button>
+      <button class="map-ctrl-btn" onclick="switchMapa('marginacion',this)"><i class="ti ti-users" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Marginación</button>
     </div>
 
-    <div class="map-wrap">
-      <div id="map" aria-label="Mapa interactivo de CDMX coloreado por cluster de riesgo de emergencias por AGEB"></div>
-      <div class="map-legend-overlay" id="map-legend">
-        <div class="map-legend-title" id="legend-title">Cluster de riesgo</div>
-        <div id="legend-items">
-          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#e74c3c"></div>Alto</div>
-          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#e67e22"></div>Medio-Alto</div>
-          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#f39c12"></div>Medio</div>
-          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#f1c40f"></div>Bajo-Medio</div>
-          <div class="map-legend-item"><div class="map-legend-swatch" style="background:#2ecc71"></div>Bajo</div>
-          <div class="map-legend-item" style="margin-top:6px;border-top:0.5px solid rgba(255,255,255,0.08);padding-top:6px;"><div class="map-legend-swatch" style="background:rgba(255,255,255,0.12)"></div>Sin datos</div>
+    <!-- Mapas Folium -->
+    <div id="mapa-prediccion" class="mapa-panel" style="display:block;">
+      <iframe src="outputs/modelo/maps/mapa_riesgo_prediccion.html" style="width:100%;height:520px;border:0.5px solid var(--border);border-radius:var(--radius);"></iframe>
+    </div>
+    <div id="mapa-probabilidad" class="mapa-panel" style="display:none;">
+      <iframe src="outputs/modelo/maps/mapa_probabilidad.html" style="width:100%;height:520px;border:0.5px solid var(--border);border-radius:var(--radius);"></iframe>
+    </div>
+    <div id="mapa-compuesto" class="mapa-panel" style="display:none;">
+      <iframe src="outputs/modelo/maps/mapa_feature_indice_riesgo_compuesto.html" style="width:100%;height:520px;border:0.5px solid var(--border);border-radius:var(--radius);"></iframe>
+    </div>
+    <div id="mapa-comparativo" class="mapa-panel" style="display:none;">
+      <iframe src="outputs/modelo/maps/mapa_comparativo.html" style="width:100%;height:520px;border:0.5px solid var(--border);border-radius:var(--radius);"></iframe>
+    </div>
+
+    <!-- Mapa Leaflet — Marginación -->
+    <div id="mapa-marginacion" class="mapa-panel" style="display:none;">
+      <div class="map-wrap">
+        <div id="map" style="width:100%;height:520px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--bg3);" aria-label="Mapa interactivo de marginación por AGEB CDMX"></div>
+        <div class="map-legend-overlay">
+          <div class="map-legend-title">Marginación (IMU 2020)</div>
+          <div>
+            <div class="map-legend-item"><div class="map-legend-swatch" style="background:#e74c3c"></div>Muy alta (≥124.1)</div>
+            <div class="map-legend-item"><div class="map-legend-swatch" style="background:#e67e22"></div>Alta (122.8–124.1)</div>
+            <div class="map-legend-item"><div class="map-legend-swatch" style="background:#f39c12"></div>Media (121.8–122.8)</div>
+            <div class="map-legend-item"><div class="map-legend-swatch" style="background:#2980b9"></div>Baja (120.7–121.8)</div>
+            <div class="map-legend-item"><div class="map-legend-swatch" style="background:#2ecc71"></div>Muy baja (&lt;120.7)</div>
+            <div class="map-legend-item" style="margin-top:6px;border-top:0.5px solid rgba(255,255,255,0.08);padding-top:6px;"><div class="map-legend-swatch" style="background:rgba(255,255,255,0.12)"></div>Sin datos</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="card" style="margin-top:16px;">
-      <div class="card-title"><i class="ti ti-info-circle"></i> Cómo leer el mapa</div>
+      <div class="card-title"><i class="ti ti-info-circle"></i> Sobre los mapas</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;font-size:12px;color:var(--text2);line-height:1.6;">
-        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Haz clic en un polígono</strong>Verás el CVEGEO, cluster asignado, scores de sismo, inundación e índice de marginación de esa AGEB.</div>
-        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Cambia la capa</strong>Los botones de arriba te permiten visualizar distintos indicadores de riesgo sobre el mismo mapa.</div>
-        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Zoom y navegación</strong>Scroll para hacer zoom. Arrastra para mover el mapa. Doble clic para centrar en esa zona.</div>
-        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Datos sin info</strong>Las zonas en gris claro no tienen datos suficientes en el v3 para ser clasificadas.</div>
+        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Predicción de riesgo</strong>AGEBs clasificadas como alto/bajo riesgo por el Ensemble GB+XGB según umbral P75.</div>
+        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Probabilidades</strong>Probabilidad continua de alto riesgo por AGEB — más matiz que la clasificación binaria.</div>
+        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Índice compuesto</strong>Combinación de riesgo sísmico, inundación y tipo de suelo en un solo índice por AGEB.</div>
+        <div><strong style="color:var(--text);display:block;margin-bottom:3px;">Marginación</strong>Índice de Marginación Urbana 2020 (CONAPO) — vulnerabilidad social por AGEB.</div>
       </div>
     </div>
 
@@ -695,7 +713,15 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-'+id).classList.add('active');
     btn.classList.add('active');
-    if (id === 'mapa' && !window.mapReady) { initMap(); window.mapReady = true; }
+  }
+
+  /* ── Switch entre mapas ── */
+  function switchMapa(id, btn) {
+    document.querySelectorAll('.mapa-panel').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.map-ctrl-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('mapa-'+id).style.display = 'block';
+    btn.classList.add('active');
+    if (id === 'marginacion' && !window.mapReady) { initMap(); window.mapReady = true; }
   }
 
   /* ── Chart.js config base ── */
